@@ -4,20 +4,56 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
 from scipy import stats
+from pathlib import Path
+
 
 def main(input_excel, output_prefix="results"):
     # Load Excel
     df = pd.read_excel(input_excel)
+
+
+    input_path = Path(input_excel)
+    out_dir = input_path.parent / "correlations2"
+    out_dir.mkdir(parents=True, exist_ok=True)
     df = df.drop(df.columns[[0, 1]], axis=1)
+    df = df.drop(columns=["age"])
     df = df.dropna()
+    df = df.rename(columns={"cluster": "meta-ROI",
+                            "pons": "Pons",
+                            "cerebellum": "Cerebellum",
+                            "wm": "WM",
+                            "ps": "PS",
+                            "ips_001": "iPS",
+                            "hn": "HN",
+                            "ihn_001": "iHN"})
+    ordered_cols = [
+        "Pons",
+        "Cerebellum",
+        "WM",
+        "PS",
+        "iPS",
+        "HN",
+        "iHN",
+        "meta-ROI",
+        # add the rest in desired order
+    ]
+    df = df[[c for c in ordered_cols if c in df.columns]]
     # === 1. Correlation Heatmap ===
     corr = df.corr() ** 2
 
     plt.figure(figsize=(10, 8))
+    plt.rcParams.update({
+            "font.size": 14,
+            "axes.titlesize": 14,
+            "axes.labelsize": 14,
+            "xtick.labelsize": 14,
+            "ytick.labelsize": 14
+        })
+
     sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm", square=True, cbar=True)
-    plt.title("R² Heatmap")
+    # plt.title("R² Heatmap")
     plt.tight_layout()
-    plt.savefig(f"{output_prefix}_heatmap.png", dpi=300)
+    plt.savefig(out_dir / f"{output_prefix}_heatmap.png", dpi=300)
     plt.close()
 
     # === 2. Regression plots (first 7 variables vs cluster) ===
@@ -42,7 +78,7 @@ def main(input_excel, output_prefix="results"):
         plt.ylabel(f"{target} (SUV)")
         plt.title(f"{col} vs {target}, R² = {r2:.3f}")
         plt.tight_layout()
-        plt.savefig(f"{output_prefix}_{col}_vs_{target}.png", dpi=300)
+        plt.savefig(out_dir / f"{output_prefix}_{col}_vs_{target}.png", dpi=300)
         plt.close()
 
     print("✅ Done. Heatmap and regression plots saved.")

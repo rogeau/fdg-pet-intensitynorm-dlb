@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from matplotlib.ticker import MaxNLocator
 
 file_path = "shoot/normalizing_factors.xlsx"
 df = pd.read_excel(file_path)
@@ -10,7 +11,7 @@ df = pd.read_excel(file_path)
 dlb_group = df[df['cluster'].notna()]
 hc_group  = df[df['cluster'].isna()]
 
-def plot_histograms_and_qq(column_name, bins=20, save_dir="shoot/average_qqplots"):
+def plot_histograms_and_qq(column_name, bins=20, save_dir="shoot/average_qqplots2"):
     os.makedirs(save_dir, exist_ok=True)
 
     # --- Select DLB / reference (HC/PS/HN) depending on prefix ---
@@ -47,6 +48,14 @@ def plot_histograms_and_qq(column_name, bins=20, save_dir="shoot/average_qqplots
     color_dlb = "#4d65a7"
     color_hc  = "#e0af0d"
 
+    for ax in axes:
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.tick_params(axis='both', labelsize=15)
+        ax.xaxis.set_major_locator(MaxNLocator(7))
+        ax.yaxis.set_major_locator(MaxNLocator(5))
+        ax.minorticks_off()
+
     # weights so each group's bars sum to 100%
     weights_dlb = np.ones(len(data_dlb)) / len(data_dlb) * 100
     weights_hc  = np.ones(len(data_hc))  / len(data_hc)  * 100
@@ -63,14 +72,18 @@ def plot_histograms_and_qq(column_name, bins=20, save_dir="shoot/average_qqplots
     axes[0].axvline(mean_hc,  color=color_hc,  linestyle='--', linewidth=2)
 
     # xlabel choice
-    if column_name.startswith(("ihn", "hn")):
-        axes[0].set_xlabel("SUVR")
-    else:
-        axes[0].set_xlabel("SUV")
+    # if column_name.startswith(("ihn", "hn")):
+    #     axes[0].set_xlabel("SUVR")
+    # else:
+    #     axes[0].set_xlabel("SUV")
 
-    axes[0].set_ylabel("Percentage (%)")
-    axes[0].set_title(f"Histogram: {column_name}")
-    axes[0].legend()
+    # axes[0].set_ylabel("Percentage (%)")
+    # axes[0].set_title(f"Histogram: {column_name}")
+    axes[0].legend(
+    loc="lower left",
+    bbox_to_anchor=(0.5, 1.01),
+    fontsize=16,
+    ncol=1)
 
     # QQ plot (DLB quantiles vs reference quantiles)
     min_len = min(len(data_dlb), len(data_hc))
@@ -82,17 +95,23 @@ def plot_histograms_and_qq(column_name, bins=20, save_dir="shoot/average_qqplots
     vmin = min(q_dlb.min(), q_hc.min())
     vmax = max(q_dlb.max(), q_hc.max())
     axes[1].plot([vmin, vmax], [vmin, vmax], 'k--', lw=2)
-    axes[1].set_xlabel("HC quantiles")
-    axes[1].set_ylabel("DLB quantiles")
-    axes[1].set_title(f"QQ Plot: {column_name}")
+    # axes[1].set_xlabel("HC quantiles")
+    # axes[1].set_ylabel("DLB quantiles")
+    # axes[1].set_title(f"QQ Plot: {column_name}")
 
-    plt.tight_layout()
     outpath = os.path.join(save_dir, f"{column_name}.png")
+    fig.subplots_adjust(
+    left=0.06,
+    right=0.98,
+    bottom=0.08,
+    top=0.84,
+    wspace=0.08)
+
     plt.savefig(outpath, dpi=300)
     plt.close()
     print(f"Saved: {outpath}")
 
 # --- Example usage ---
 print(df.columns)
-for factor in df.columns[2:-1]:
+for factor in df.columns[2:-2]:
     plot_histograms_and_qq(factor)

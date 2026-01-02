@@ -1,9 +1,15 @@
-function inorm_ips(patient_dir, threshold)
+function inorm_ips(patient_dir, threshold, contrast)
     if nargin < 2
         threshold = 0.01;
     elseif ischar(threshold) || isstring(threshold)
         threshold = str2double(threshold);
     end
+
+    if nargin < 3
+        contrast = 'f';
+    end
+
+    patient_dir = char(strip(patient_dir, '/'));
 
     [parent_dir, ~, ~] = fileparts(patient_dir);
     threshold_str = strrep(num2str(threshold, '%.15g'), '.', '');
@@ -19,21 +25,35 @@ function inorm_ips(patient_dir, threshold)
     end
 
     % --- Add dynamic column for this threshold ---
-    col_name = sprintf('ips_%s', threshold_str);
+    if strcmp(contrast, 'f')
+        col_name = sprintf('ips_%s', threshold_str);
+    elseif strcmp(contrast, 't')
+        col_name = sprintf('ips_%s_t', threshold_str);
+    end
+
     if ~ismember(col_name, norm_table.Properties.VariableNames)
         norm_table.(col_name) = NaN(height(norm_table),1);
     end
 
     nii_files = dir(fullfile(patient_dir, '**', 'wr_petsuv.nii'));
-    qc_pdf = fullfile(fileparts(parent_dir), sprintf('ips%s_QC.pdf', threshold_str));
-    
+
+    if strcmp(contrast, 'f')
+        qc_pdf = fullfile(fileparts(parent_dir), sprintf('ips%s_QC.pdf', threshold_str));
+    elseif strcmp(contrast, 't')
+        qc_pdf = fullfile(fileparts(parent_dir), sprintf('ips%s_t_QC.pdf', threshold_str));
+    end
+
     if exist(qc_pdf, 'file')
         delete(qc_pdf);
     end
 
     for i = 1:length(nii_files)
         file_path = fullfile(nii_files(i).folder, nii_files(i).name);
-        mask_path = fullfile(nii_files(i).folder, sprintf('ips_mask%s.nii', threshold_str));
+        if strcmp(contrast, 'f')
+            mask_path = fullfile(nii_files(i).folder, sprintf('ips_mask%s.nii', threshold_str));
+        elseif strcmp(contrast, 't')
+            mask_path = fullfile(nii_files(i).folder, sprintf('ips_mask%s_t.nii', threshold_str));
+        end
 
         if ~exist(file_path, 'file')
             warning('File not found: %s. Skipping.', file_path);
@@ -61,7 +81,11 @@ function inorm_ips(patient_dir, threshold)
             norm_pet = Ypet ./ mask_mean;
             Vn = Vp;
             [~, name, ext] = fileparts(nii_files(i).name);
-            Vn.fname = fullfile(nii_files(i).folder, [sprintf('ips%s_', threshold_str) name ext]);
+            if strcmp(contrast, 'f')
+                Vn.fname = fullfile(nii_files(i).folder, [sprintf('ips%s_', threshold_str) name ext]);
+            elseif strcmp(contrast, 't')
+                Vn.fname = fullfile(nii_files(i).folder, [sprintf('ips%s_t_', threshold_str) name ext]);
+            end
             spm_write_vol(Vn, norm_pet);
         end
 

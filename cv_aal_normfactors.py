@@ -8,8 +8,10 @@ def plot_cv(aal, normalizing_factors, output_prefix="results"):
     df = pd.read_excel(aal).dropna()
     df = df.drop(df.columns[0], axis=1)  # drop first column (ID column)
 
-    df_norm = pd.read_excel(normalizing_factors).dropna()
+    df_norm = pd.read_excel(normalizing_factors)
     df_norm = df_norm.drop(df_norm.columns[:2], axis=1)  # drop first 2 cols (ID + cluster?)
+    df_norm = df_norm.drop(df_norm.columns[-1], axis=1)
+    df_norm = df_norm.dropna()
 
     target = "cluster"
     predictors = [col for col in df.columns if col != target]
@@ -28,6 +30,7 @@ def plot_cv(aal, normalizing_factors, output_prefix="results"):
             cv_values_norm[col] = df_norm[col].std() / df_norm[col].mean()
 
     cv_norm_df = pd.DataFrame(list(cv_values_norm.items()), columns=["Region", "CV_norm"])
+    print(cv_norm_df)
 
     # --- Merge both sets ---
     merged_df = pd.merge(cv_df, cv_norm_df, on="Region", how="outer")
@@ -60,8 +63,6 @@ def plot_cv(aal, normalizing_factors, output_prefix="results"):
     # Formatting
     plt.xlim(-1, len(merged_df))
     plt.ylabel("Coefficient of Variation")
-    plt.title("Coefficients of variation per AAL region and normalizing approach")
-    plt.legend()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 

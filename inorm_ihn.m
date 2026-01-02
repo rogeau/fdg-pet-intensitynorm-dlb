@@ -1,8 +1,12 @@
-function inorm_ihn(patient_dir, threshold)
+function inorm_ihn(patient_dir, threshold, contrast)
     if nargin < 2
         threshold = 0.01;
     elseif ischar(threshold) || isstring(threshold)
         threshold = str2double(threshold);
+    end
+
+    if nargin < 3
+        contrast = 'f';
     end
 
     % Remove trailing slash if exists
@@ -22,7 +26,11 @@ function inorm_ihn(patient_dir, threshold)
     end
 
     % --- Add dynamic column for this threshold ---
-    col_name = sprintf('ihn_%s', threshold_str);
+    if strcmp(contrast, 'f')
+        col_name = sprintf('ihn_%s', threshold_str);
+    elseif strcmp(contrast, 't')
+        col_name = sprintf('ihn_%s_t', threshold_str);
+    end
     if ~ismember(col_name, norm_table.Properties.VariableNames)
         norm_table.(col_name) = NaN(height(norm_table),1);
     end
@@ -31,10 +39,16 @@ function inorm_ihn(patient_dir, threshold)
     template_path = 'hn_template.nii';
     Vt = spm_vol(template_path);
     template = spm_read_vols(Vt);
-
-    qc_pdf = fullfile(parent_dir, sprintf('ihn%s_QC.pdf', threshold_str));
-    if exist(qc_pdf, 'file')
-        delete(qc_pdf);
+    if strcmp(contrast, 'f')
+        qc_pdf = fullfile(parent_dir, sprintf('ihn%s_QC.pdf', threshold_str));
+        if exist(qc_pdf, 'file')
+            delete(qc_pdf);
+        end
+    elseif strcmp(contrast, 't')
+        qc_pdf = fullfile(parent_dir, sprintf('ihn%s_t_QC.pdf', threshold_str));
+        if exist(qc_pdf, 'file')
+            delete(qc_pdf);
+        end
     end
 
     for i = 1:numel(paths)
@@ -42,7 +56,12 @@ function inorm_ihn(patient_dir, threshold)
         Vi = spm_vol(file_path);
         img = spm_read_vols(Vi);
 
-        mask_path = fullfile(paths(i).folder, sprintf('ihn_mask%s.nii', threshold_str));
+        if strcmp(contrast, 'f')
+            mask_path = fullfile(paths(i).folder, sprintf('ihn_mask%s.nii', threshold_str));
+        elseif strcmp(contrast, 't')
+            mask_path = fullfile(paths(i).folder, sprintf('ihn_mask%s_t.nii', threshold_str));
+        end
+
         if ~exist(mask_path, 'file')
             warning('Mask not found: %s. Skipping.', mask_path);
             continue;
@@ -67,7 +86,12 @@ function inorm_ihn(patient_dir, threshold)
         img_hn = img_to_norm / mode_val;
 
         Vout = Vn;
-        Vout.fname = fullfile(paths(i).folder, sprintf('ihn%s_wr_petsuv.nii', threshold_str));
+        if strcmp(contrast, 'f')
+            Vout.fname = fullfile(paths(i).folder, sprintf('ihn%s_wr_petsuv.nii', threshold_str));
+        elseif strcmp(contrast, 't')
+            Vout.fname = fullfile(paths(i).folder, sprintf('ihn%s_t_wr_petsuv.nii', threshold_str));
+        end
+      
         spm_write_vol(Vout, img_hn);
 
         % --- Update Excel ---
