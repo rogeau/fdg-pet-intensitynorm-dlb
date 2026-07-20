@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+WEIGHTED = True
+
 file_path = "shoot/normalizing_factors.xlsx"
 df = pd.read_excel(file_path)
 df = df.drop(["age"], axis=1)
@@ -91,6 +93,17 @@ composc_df = pd.DataFrame({
 composc_df = composc_df.dropna()
 composc_df = composc_df.apply(lambda x: (x - x.mean()) / x.std())
 composc_df = composc_df * -1
+
+if WEIGHTED:
+    weights = {
+        'average_diff': 2.8,
+        'R_squared': 0,
+        'cv': 1,
+        'roc': 0.2
+    }
+    for col, weight in weights.items():
+        composc_df[col] *= weight
+
 # Suppose you want to sum 'col1', 'col2', 'col3'
 composc_df['compos_sc'] = composc_df[['average_diff', 'R_squared', 'cv', 'roc']].sum(axis=1)
 
@@ -171,7 +184,7 @@ for i, row in composc_df.iterrows():
     if i not in legend_rows:
         values = np.roll(row.values, -top_index)
         values_closed = np.concatenate((values, [values[0]]))
-        ax.plot(angles_closed, values_closed, color='gray', alpha=0.35, lw=1)
+        ax.plot(angles_closed, values_closed, color='gray', alpha=0.35, lw=0.8)
 
 for i in legend_rows:
     row = composc_df.loc[i]
@@ -180,8 +193,8 @@ for i in legend_rows:
     ax.plot(
         angles_closed,
         values_closed,
-        lw=4,
-        alpha=0.7,
+        lw=2,
+        alpha=0.9,
         color=color_map[i],
         label=legend_label_map[i]
     )
@@ -257,5 +270,5 @@ labels.append("AAL regions")
 
 ax.legend(handles, labels, loc='upper right', bbox_to_anchor=(1.3, 1.1))
 
-plt.savefig('shoot/composite_score2/radar_plot.png', bbox_inches='tight', dpi=300)
+plt.savefig('shoot/composite_score_weighted.png', bbox_inches='tight', dpi=300)
 plt.show()

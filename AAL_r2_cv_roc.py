@@ -199,10 +199,12 @@ fig, (ax_r2, ax_cv, ax_roc) = plt.subplots(
 )
 
 for ax in [ax_r2, ax_cv, ax_roc]:
-    ax.spines['top'].set_visible(False)
+    ax.spines['top'].set_visible(True)
     ax.spines['right'].set_visible(False)
     ax.margins(y=0.01)
     ax.tick_params(axis='x', labelsize=11)
+    ax.grid(axis='x', linestyle='--', linewidth=0.8, alpha=1)
+    ax.tick_params(axis='x', top=True, labeltop=True)
 
 
 ax_r2.set_xlim(left=0.1)

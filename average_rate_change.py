@@ -43,6 +43,7 @@ all_intervals = (
 avg_interval_days = all_intervals.mean()
 max_interval_days = all_intervals.max()
 min_interval_days = all_intervals.min()
+std_interval_days = all_intervals.std()
 
 # Total number of scans from subjects with ≥2 scans
 total_scans_multi = df[df['IPP'].isin(scan_counts[scan_counts >= 2].index)].shape[0]
@@ -53,6 +54,7 @@ print(f"Patients with ≥2 scans: {n_multi_scan}")
 print(f"Average interval between scans (global): {avg_interval_days:.1f} days")
 print(f"Maximum interval between scans (global): {max_interval_days:.1f} days")
 print(f"Minimum interval between scans (global): {min_interval_days:.1f} days")
+print(f"Standard deviation of intervals between scans (global): {std_interval_days:.1f} days")
 print(f"Total number of scans from subjects with ≥2 scans: {total_scans_multi}")
 
 

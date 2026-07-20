@@ -11,7 +11,7 @@ df = pd.read_excel(file_path)
 dlb_group = df[df['cluster'].notna()]
 hc_group  = df[df['cluster'].isna()]
 
-def plot_histograms_and_qq(column_name, bins=20, save_dir="shoot/average_qqplots3"):
+def plot_histograms_and_qq(column_name, bins=20, save_dir="shoot/eccn_averages"):
     os.makedirs(save_dir, exist_ok=True)
 
     # --- Select DLB / reference (HC/PS/HN) depending on prefix ---
@@ -43,33 +43,32 @@ def plot_histograms_and_qq(column_name, bins=20, save_dir="shoot/average_qqplots
     combined = np.concatenate([data_dlb.values, data_hc.values])
     bin_edges = np.histogram_bin_edges(combined, bins=bins)
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 
     color_dlb = "#4d65a7"
     color_hc  = "#e0af0d"
 
-    for ax in axes:
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.tick_params(axis='both', labelsize=20)
-        ax.xaxis.set_major_locator(MaxNLocator(7))
-        ax.yaxis.set_major_locator(MaxNLocator(5))
-        ax.minorticks_off()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.tick_params(axis='both', labelsize=20)
+    ax.xaxis.set_major_locator(MaxNLocator(7))
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    ax.minorticks_off()
 
     # weights so each group's bars sum to 100%
     weights_dlb = np.ones(len(data_dlb)) / len(data_dlb) * 100
     weights_hc  = np.ones(len(data_hc))  / len(data_hc)  * 100
 
-    axes[0].hist(data_dlb, bins=bin_edges, alpha=0.6,
+    ax.hist(data_dlb, bins=bin_edges, alpha=0.6,
                  weights=weights_dlb,
                  label=f'DLB (mean={mean_dlb:.2f})', color=color_dlb)
-    axes[0].hist(data_hc, bins=bin_edges, alpha=0.6,
+    ax.hist(data_hc, bins=bin_edges, alpha=0.6,
                  weights=weights_hc,
                  label=f'HC (mean={mean_hc:.2f})', color=color_hc)
 
     # mean lines
-    axes[0].axvline(mean_dlb, color=color_dlb, linestyle='--', linewidth=2)
-    axes[0].axvline(mean_hc,  color=color_hc,  linestyle='--', linewidth=2)
+    ax.axvline(mean_dlb, color=color_dlb, linestyle='--', linewidth=2)
+    ax.axvline(mean_hc,  color=color_hc,  linestyle='--', linewidth=2)
 
     # xlabel choice
     # if column_name.startswith(("ihn", "hn")):
@@ -79,32 +78,13 @@ def plot_histograms_and_qq(column_name, bins=20, save_dir="shoot/average_qqplots
 
     # axes[0].set_ylabel("Percentage (%)")
     # axes[0].set_title(f"Histogram: {column_name}")
-    axes[0].legend(
-    loc="lower left",
-    bbox_to_anchor=(0.392, 0.98),
-    fontsize=20,
-    ncol=1)
-
-    # QQ plot (DLB quantiles vs reference quantiles)
-    min_len = min(len(data_dlb), len(data_hc))
-    quantiles = np.linspace(0, 1, min_len)
-    q_dlb = np.quantile(data_dlb, quantiles)
-    q_hc  = np.quantile(data_hc, quantiles)
-
-    axes[1].scatter(q_hc, q_dlb, alpha=0.7, color="#54037a")
-    vmin = min(q_dlb.min(), q_hc.min())
-    vmax = max(q_dlb.max(), q_hc.max())
-    axes[1].plot([vmin, vmax], [vmin, vmax], 'k--', lw=2)
-    # axes[1].set_xlabel("HC quantiles")
-    # axes[1].set_ylabel("DLB quantiles")
-    # axes[1].set_title(f"QQ Plot: {column_name}")
 
     outpath = os.path.join(save_dir, f"{column_name}.png")
     fig.subplots_adjust(
-    left=0.06,
+    left=0.08,
     right=0.98,
     bottom=0.08,
-    top=0.84,
+    top=0.98,
     wspace=0.08)
 
     plt.savefig(outpath, dpi=300)

@@ -11,7 +11,7 @@ def compute_averages(root_dir, aal_json_path, output_xlsx="aal_pet_values.xlsx")
 
     region_names = list(aal_dict.values())
     results = []
-    aal_path = "r_aal.nii"
+    aal_path = "aal.nii"
     aal_img = nib.load(aal_path).get_fdata().astype(int)
 
     # Precompute indices for new meta-regions
@@ -82,4 +82,4 @@ def compute_averages(root_dir, aal_json_path, output_xlsx="aal_pet_values.xlsx")
 
 
 if __name__ == "__main__":
-    compute_averages('shoot/', 'aal116.json', 'shoot/correlations/ROI_correlations/aal_values.xlsx')
+    compute_averages('shoot/', 'aal116.json', 'shoot/correlations/ROI_correlations/test.xlsx')

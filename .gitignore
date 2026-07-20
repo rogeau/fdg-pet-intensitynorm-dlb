@@ -38,4 +38,8 @@ r_aal.nii
 
 gm_wm_mask.nii
 
+simulation_intensitynorm/ellipses/*
 
+simulation_intensitynorm/figs/*
+
+simulation_intensitynorm/hoffman_nii/*
